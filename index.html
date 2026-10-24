@@ -20,7 +20,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #0d0a10;
+      background-color: #0f0c13;
       color: #ede6f2;
       font-family: 'JetBrains Mono', monospace;
     }
@@ -53,7 +53,7 @@
       flex-direction: column;
       justify-content: center;
       padding: 0 clamp(2rem, 8vw, 9rem);
-      pointer-events: none; /* Allows cursor/clicks to warp CRT behind */
+      pointer-events: none; /* Passes cursor & clicks through to CRT canvas */
     }
 
     .hero-content {
@@ -73,7 +73,7 @@
       line-height: 1.1;
       letter-spacing: -0.02em;
       color: #ffffff;
-      text-shadow: 0 0 24px rgba(200, 170, 220, 0.45), 0 0 50px rgba(39, 32, 42, 0.9);
+      text-shadow: 0 0 20px rgba(181, 139, 209, 0.6), 0 0 50px rgba(39, 32, 42, 0.9);
       word-break: break-word;
     }
 
@@ -84,7 +84,7 @@
       background: #e3d2ed;
       margin-left: 0.25rem;
       vertical-align: baseline;
-      box-shadow: 0 0 12px rgba(227, 210, 237, 0.8);
+      box-shadow: 0 0 12px rgba(227, 210, 237, 0.85);
       animation: blink 0.75s step-start infinite;
     }
 
@@ -103,7 +103,7 @@
       gap: 0.75rem;
       padding: 0.65rem 0.85rem;
       background: rgba(39, 32, 42, 0.55);
-      border: 1px solid rgba(165, 135, 180, 0.25);
+      border: 1px solid rgba(181, 139, 209, 0.3);
       border-radius: 18px;
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -143,7 +143,6 @@
       transform: scale(1.1);
     }
 
-    /* Brand Hover Accents */
     .social-btn.linkedin:hover {
       border-color: #0077b5;
       box-shadow: 0 0 16px rgba(0, 119, 181, 0.5);
@@ -168,7 +167,6 @@
       color: #ffa116;
     }
 
-    /* Tooltip */
     .social-btn::after {
       content: attr(data-tooltip);
       position: absolute;
@@ -177,7 +175,7 @@
       transform: translateX(-50%) translateY(4px);
       padding: 0.35rem 0.6rem;
       background: rgba(22, 18, 25, 0.95);
-      border: 1px solid rgba(165, 135, 180, 0.3);
+      border: 1px solid rgba(181, 139, 209, 0.3);
       border-radius: 6px;
       font-size: 0.72rem;
       white-space: nowrap;
@@ -203,7 +201,7 @@
 </head>
 <body>
 
-  <!-- Fullscreen CRT Warp Container -->
+  <!-- CRT Warp Background -->
   <div id="crt-container" class="crt-warp-container"></div>
 
   <!-- Left-Aligned Typewriter Viewport -->
@@ -247,9 +245,8 @@
     </a>
   </nav>
 
-  <!-- ==================== LOGIC ==================== -->
   <script>
-    /* 1. ReactBits TextType Implementation (typingSpeed: 20ms) */
+    /* 1. ReactBits TextType (typingSpeed = 20ms) */
     const texts = [
       "Pavan Kumar",
       "Backend Dev | Go | WEB3 "
@@ -289,7 +286,7 @@
     }
     runTypewriter();
 
-    /* 2. Direct Port of ReactBits CRTWarp WebGL2 Engine */
+    /* 2. ReactBits CRTWarp WebGL2 Engine */
     (function initCRTWarp() {
       const container = document.getElementById('crt-container');
       const MASKS = { none: 0, aperture: 1, shadow: 2, slot: 3 };
@@ -496,7 +493,7 @@
         uv.y += uRoll;
         float wrapped = fract(uv.y);
         uv.y = mix(uv.y, wrapped, rolling);
-        offset = fract(uRoll);
+        float offset = fract(uRoll);
         float reach = smoothstep(0.0, 0.08, min(offset, 1.0 - offset));
         float blank = mix(1.0, smoothstep(0.0, 0.05, wrapped) * smoothstep(1.0, 0.95, wrapped), rolling * reach);
 
@@ -604,6 +601,7 @@
         gl.shaderSource(shader, source);
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          console.error(gl.getShaderInfoLog(shader));
           gl.deleteShader(shader);
           return null;
         }
@@ -623,6 +621,7 @@
         gl.deleteShader(vertex);
         gl.deleteShader(shader);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+          console.error(gl.getProgramInfoLog(program));
           gl.deleteProgram(program);
           return null;
         }
@@ -657,10 +656,10 @@
 
       const prefersReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
-      // Phosphor color: #27202a
+      // Phosphor tuned to radiant violet matching #27202a hue with clear CRT luminescence
       const settings = {
-        ink: parseColor('#27202a', [0.153, 0.125, 0.165]),
-        paper: parseColor('#0f0c11', [0.06, 0.05, 0.07]),
+        ink: [0.72, 0.58, 0.78],
+        paper: parseColor('#0f0c13', [0.06, 0.05, 0.08]),
         lightMode: false,
         speed: 0.5,
         variation: 0,
@@ -668,21 +667,21 @@
         frequency: Math.max(0.01, 2.5) / 2.2,
         levels: 3,
         columns: 80,
-        persistence: 0.4,
+        persistence: 0.45,
         curve: 1.1 + 0.42 / 0.25,
         corners: 0,
         scanline: 0.6,
         lines: 200,
         mask: MASKS['aperture'],
-        maskStrength: 0.3,
-        bloom: 1.5,
+        maskStrength: 0.35,
+        bloom: 1.6,
         bloomRadius: 1,
         rgbShift: 0.003,
         noise: 0.1,
         flicker: 0.15,
         interference: 0.2,
         vignette: 0.3,
-        brightness: 1,
+        brightness: 1.25,
         intro: true,
         mouseReact: true,
         mouseStrength: 0.5,
@@ -718,6 +717,8 @@
         'uBloom', 'uBrightness', 'uNoise', 'uFlicker', 'uInterference', 'uVignette', 'uShift',
         'uWarm', 'uFocus', 'uStatic', 'uRoll', 'uTear', 'uGain', 'uMagnet', 'uPurity'
       ]);
+
+      if (!content || !glowSource || !blur || !display) return;
 
       const vao = gl.createVertexArray();
       gl.bindVertexArray(vao);
@@ -934,6 +935,7 @@
         state.magnetGoal = 0;
       });
 
+      // Authentic TV channel flip on click
       window.addEventListener('pointerdown', event => {
         if (!settings.changeOnClick || event.button !== 0) return;
         if (event.target instanceof Element && event.target.closest('a, button')) return;
