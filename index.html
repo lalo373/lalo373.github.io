@@ -60,36 +60,6 @@
       max-width: 950px;
     }
 
-    .role-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0.85rem;
-      border-radius: 9999px;
-      background: rgba(39, 32, 42, 0.65);
-      border: 1px solid rgba(175, 140, 190, 0.25);
-      backdrop-filter: blur(8px);
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #cbbad4;
-      margin-bottom: 1.5rem;
-    }
-
-    .pulse-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #34d399;
-      box-shadow: 0 0 8px #34d399;
-      animation: pulse 2s infinite ease-in-out;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.3; transform: scale(0.85); }
-    }
-
     .typewriter-wrapper {
       min-height: 5.5rem;
       display: flex;
@@ -239,10 +209,6 @@
   <!-- Left-Aligned Typewriter Viewport -->
   <main class="viewport">
     <div class="hero-content">
-      <div class="role-tag">
-        <span class="pulse-dot"></span>
-        <span>Portfolio</span>
-      </div>
       <div class="typewriter-wrapper">
         <h1 class="typewriter-heading" id="typewriter"></h1>
         <span class="typewriter-cursor"></span>
@@ -530,7 +496,7 @@
         uv.y += uRoll;
         float wrapped = fract(uv.y);
         uv.y = mix(uv.y, wrapped, rolling);
-        float offset = fract(uRoll);
+        offset = fract(uRoll);
         float reach = smoothstep(0.0, 0.08, min(offset, 1.0 - offset));
         float blank = mix(1.0, smoothstep(0.0, 0.05, wrapped) * smoothstep(1.0, 0.95, wrapped), rolling * reach);
 
@@ -691,7 +657,7 @@
 
       const prefersReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
-      // Settings with your phosphor color: #27202a
+      // Phosphor color: #27202a
       const settings = {
         ink: parseColor('#27202a', [0.153, 0.125, 0.165]),
         paper: parseColor('#0f0c11', [0.06, 0.05, 0.07]),
@@ -968,7 +934,6 @@
         state.magnetGoal = 0;
       });
 
-      // Click to flip channel (authentic CRT screen switch)
       window.addEventListener('pointerdown', event => {
         if (!settings.changeOnClick || event.button !== 0) return;
         if (event.target instanceof Element && event.target.closest('a, button')) return;
