@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pavan Kumar | Backend Dev · Go · WEB3</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --phosphor-raw: #27202a;
+      --phosphor-glow: #8e719b;
+      --phosphor-bright: #e7d8f0;
+      --bg-dark: #0a080d;
+      --surface-glass: rgba(39, 32, 42, 0.45);
+      --border-glass: rgba(142, 113, 155, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      color: #f1edfa;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* CRT Canvas Container */
+    #crt-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Scanline & Vignette Overlay */
+    .crt-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 55%, rgba(10, 8, 13, 0.85) 100%),
+                  repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 3px);
+    }
+
+    /* Main Container */
+    .viewport {
+      position: relative;
+      z-index: 3;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 clamp(1.5rem, 8vw, 8rem);
+    }
+
+    /* Left-aligned Typewriter Hero */
+    .hero-container {
+      max-width: 900px;
+      user-select: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      background: rgba(39, 32, 42, 0.6);
+      border: 1px solid var(--border-glass);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--phosphor-bright);
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .typewriter-box {
+      min-height: 4.5rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .typewriter-text {
+      font-family: 'Space Grotesk', 'JetBrains Mono', sans-serif;
+      font-size: clamp(2.2rem, 6vw, 4.8rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(142, 113, 155, 0.5), 0 0 40px rgba(39, 32, 42, 0.8);
+      word-break: break-word;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 0.15em;
+      height: 0.9em;
+      background: var(--phosphor-bright);
+      margin-left: 0.2rem;
+      vertical-align: baseline;
+      box-shadow: 0 0 10px var(--phosphor-glow);
+      animation: blink 0.75s step-start infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* Bottom-Right Socials Dock */
+    .socials-dock {
+      position: fixed;
+      right: clamp(1.2rem, 3vw, 2.5rem);
+      bottom: clamp(1.2rem, 3vw, 2.5rem);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.8rem;
+      background: var(--surface-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: 18px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .social-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid transparent;
+      color: #d1c7d8;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .social-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      transition: transform 0.25s ease;
+    }
+
+    .social-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .social-btn:hover svg {
+      transform: scale(1.1);
+    }
+
+    /* Distinct Brand Accents on Hover */
+    .social-btn.linkedin:hover {
+      border-color: #0077b5;
+      box-shadow: 0 0 16px rgba(0, 119, 181, 0.45);
+      color: #0077b5;
+    }
+
+    .social-btn.discord:hover {
+      border-color: #5865f2;
+      box-shadow: 0 0 16px rgba(88, 101, 242, 0.45);
+      color: #5865f2;
+    }
+
+    .social-btn.cyfrin:hover {
+      border-color: #f43f5e;
+      box-shadow: 0 0 16px rgba(244, 63, 94, 0.45);
+      color: #f43f5e;
+    }
+
+    .social-btn.leetcode:hover {
+      border-color: #ffa116;
+      box-shadow: 0 0 16px rgba(255, 161, 22, 0.45);
+      color: #ffa116;
+    }
+
+    /* Tooltip */
+    .social-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      padding: 0.3rem 0.55rem;
+      background: rgba(18, 14, 20, 0.95);
+      border: 1px solid var(--border-glass);
+      border-radius: 6px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      color: #fff;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.2s ease;
+    }
+
+    .social-btn:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 600px) {
+      .socials-dock {
+        right: 50%;
+        transform: translateX(50%);
+        bottom: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WebGL CRT Canvas -->
+  <canvas id="crt-canvas"></canvas>
+  <div class="crt-overlay"></div>
+
+  <main class="viewport">
+    <div class="hero-container">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span>Systems & Web3 Engineer</span>
+      </div>
+      <div class="typewriter-box">
+        <h1 class="typewriter-text" id="typewriter"></h1>
+        <span class="cursor"></span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom-Right Socials Dock -->
+  <nav class="socials-dock" aria-label="Social Profiles">
+    <!-- LinkedIn -->
+    <a href="https://www.linkedin.com/in/pavan-kumar-98318a278/" target="_blank" rel="noopener noreferrer" class="social-btn linkedin" data-tooltip="LinkedIn">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+      </svg>
+    </a>
+
+    <!-- Discord -->
+    <a href="https://discord.com/users/1349598043862863912" target="_blank" rel="noopener noreferrer" class="social-btn discord" data-tooltip="Discord">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+      </svg>
+    </a>
+
+    <!-- Cyfrin -->
+    <a href="https://profiles.cyfrin.io/u/pvnkmr" target="_blank" rel="noopener noreferrer" class="social-btn cyfrin" data-tooltip="Cyfrin Updraft">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <!-- Cyfrin Security Shield & Hawk mark -->
+        <path d="M12 2L3 6v6.27c0 5.4 3.84 10.45 9 11.73 5.16-1.28 9-6.33 9-11.73V6l-9-4zm-1.1 14.5l-4-4 1.4-1.4 2.6 2.6 6.6-6.6 1.4 1.4-8 8z"/>
+      </svg>
+    </a>
+
+    <!-- LeetCode -->
+    <a href="https://leetcode.com/u/URYDUAji8B/" target="_blank" rel="noopener noreferrer" class="social-btn leetcode" data-tooltip="LeetCode">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M13.483 0a1.374 1.374 0 0 0-.961.438L7.116 5.845a1.375 1.375 0 0 0 0 1.942l4.8 4.8a1.375 1.375 0 0 0 1.942 0l4.8-4.8a1.375 1.375 0 0 0 0-1.942L13.483.438A1.374 1.374 0 0 0 12.522 0zm-5.068 9.53a1.375 1.375 0 0 0-.961.402l-4.8 4.8a1.375 1.375 0 0 0 0 1.942l4.8 4.8a1.375 1.375 0 0 0 1.942 0l4.8-4.8a1.375 1.375 0 0 0 0-1.942l-4.8-4.8a1.375 1.375 0 0 0-.981-.402zM15.5 12a1 1 0 0 0-1 1v5a1 1 0 0 0 2 0v-5a1 1 0 0 0-1-1z"/>
+      </svg>
+    </a>
+  </nav>
+
+  <script>
+    /* ========================================================
+       1. TYPEWRITER (TextType, typingSpeed = 20ms)
+       ======================================================== */
+    const texts = [
+      "Pavan Kumar",
+      "Backend Dev | Go | WEB3 "
+    ];
+
+    const typingSpeed = 20;     // 20ms per character
+    const backspaceSpeed = 15;  // Delete speed
+    const pauseDelay = 1800;    // Pause between phrases
+
+    let textIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    const typewriterEl = document.getElementById("typewriter");
+
+    function typeLoop() {
+      const currentFullText = texts[textIndex];
+
+      if (!isDeleting) {
+        charIndex++;
+        typewriterEl.textContent = currentFullText.substring(0, charIndex);
+
+        if (charIndex === currentFullText.length) {
+          isDeleting = true;
+          setTimeout(typeLoop, pauseDelay);
+          return;
+        }
+        setTimeout(typeLoop, typingSpeed);
+      } else {
+        charIndex--;
+        typewriterEl.textContent = currentFullText.substring(0, charIndex);
+
+        if (charIndex === 0) {
+          isDeleting = false;
+          textIndex = (textIndex + 1) % texts.length;
+          setTimeout(typeLoop, 350);
+          return;
+        }
+        setTimeout(typeLoop, backspaceSpeed);
+      }
+    }
+
+    typeLoop();
+
+    /* ========================================================
+       2. REACTBITS CRT WARP SHADER (Phosphor Color: #27202a)
+       ======================================================== */
+    const canvas = document.getElementById("crt-canvas");
+    const gl = canvas.getContext("webgl");
+
+    if (gl) {
+      const vsSource = `
+        attribute vec2 position;
+        void main() {
+          gl_Position = vec4(position, 0.0, 1.0);
+        }
+      `;
+
+      // Phosphor color #27202a -> vec3(39/255, 32/255, 42/255)
+      const fsSource = `
+        precision highp float;
+        uniform vec2 u_resolution;
+        uniform vec2 u_mouse;
+        uniform float u_time;
+
+        // Barrel curvature / CRT distortion
+        vec2 crtWarp(vec2 uv) {
+          vec2 centered = uv - 0.5;
+          float r2 = dot(centered, centered);
+          centered *= 1.0 + r2 * 0.42;
+          return centered + 0.5;
+        }
+
+        void main() {
+          vec2 st = gl_FragCoord.xy / u_resolution.xy;
+          st.y = 1.0 - st.y;
+
+          vec2 warpedUV = crtWarp(st);
+
+          // Screen frame border cut off
+          if (warpedUV.x < 0.0 || warpedUV.x > 1.0 || warpedUV.y < 0.0 || warpedUV.y > 1.0) {
+            gl_FragColor = vec4(0.04, 0.03, 0.05, 1.0);
+            return;
+          }
+
+          // Magnetic mouse interaction
+          vec2 m = u_mouse / u_resolution;
+          m.y = 1.0 - m.y;
+          float mDist = length(warpedUV - m);
+          float warpPull = smoothstep(0.45, 0.0, mDist) * 0.04;
+          warpedUV += (warpedUV - m) * warpPull;
+
+          // CRT Warp Plasma wave computation
+          float t = u_time * 0.55;
+          vec2 p = warpedUV * 3.5;
+          float v1 = sin(p.x * 2.2 + t);
+          float v2 = sin(p.y * 1.8 - t * 0.7);
+          float v3 = sin((p.x + p.y) * 2.0 + sin(t * 0.3));
+          float wave = (v1 + v2 + v3 + 3.0) / 6.0;
+
+          // Phosphor color grading with #27202a base
+          vec3 basePhosphor = vec3(0.153, 0.125, 0.165); // #27202a
+          vec3 brightPhosphor = vec3(0.55, 0.44, 0.61);  // Glow accent
+          vec3 tint = mix(basePhosphor * 0.7, brightPhosphor, wave * 0.9);
+
+          // Scanline generator
+          float scanlines = sin(warpedUV.y * u_resolution.y * 1.2) * 0.08;
+          tint -= scanlines;
+
+          // Phosphor mask pattern (RGB sub-pixels simulation)
+          float mask = mod(gl_FragCoord.x, 3.0);
+          if (mask < 1.0) tint.r *= 1.08;
+          else if (mask < 2.0) tint.g *= 0.98;
+          else tint.b *= 1.12;
+
+          // Corner vignette
+          float vig = 16.0 * warpedUV.x * warpedUV.y * (1.0 - warpedUV.x) * (1.0 - warpedUV.y);
+          tint *= clamp(pow(vig, 0.25), 0.0, 1.0);
+
+          gl_FragColor = vec4(tint, 1.0);
+        }
+      `;
+
+      function compileShader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return s;
+      }
+
+      const program = gl.createProgram();
+      gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vsSource));
+      gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fsSource));
+      gl.linkProgram(program);
+      gl.useProgram(program);
+
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+        gl.STATIC_DRAW
+      );
+
+      const posLoc = gl.getAttribLocation(program, "position");
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+      const resLoc = gl.getUniformLocation(program, "u_resolution");
+      const mouseLoc = gl.getUniformLocation(program, "u_mouse");
+      const timeLoc = gl.getUniformLocation(program, "u_time");
+
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let targetX = mouseX;
+      let targetY = mouseY;
+
+      window.addEventListener("mousemove", (e) => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+      });
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      function render(now) {
+        // Smooth cursor dampening
+        mouseX += (targetX - mouseX) * 0.05;
+        mouseY += (targetY - mouseY) * 0.05;
+
+        gl.uniform2f(resLoc, canvas.width, canvas.height);
+        gl.uniform2f(mouseLoc, mouseX, mouseY);
+        gl.uniform1f(timeLoc, now * 0.001);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    }
+  </script>
+</body>
+</html>
